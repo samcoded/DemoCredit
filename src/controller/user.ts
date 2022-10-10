@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
-import db from '../db/database';
 import User from '../interface/user';
-import { UserService } from '../service/user';
-
-const userService = new UserService();
+import userService from '../service/user';
 
 class UserController {
     async register(req: Request, res: Response) {
@@ -42,7 +39,7 @@ class UserController {
             .json({ message: 'Login successful', data: login.data });
     }
 
-    async read(req: Request, res: Response) {
+    async readAll(req: Request, res: Response) {
         const read = await userService.readAll();
         if (!read.success)
             return res.status(500).json({ message: read.message, data: {} });
@@ -97,4 +94,4 @@ class UserController {
     }
 }
 
-export { UserController };
+export default new UserController();

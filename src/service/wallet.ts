@@ -1,4 +1,3 @@
-import knex, { Knex } from 'knex';
 import db from '../db/database';
 import Wallet from '../interface/wallet';
 
@@ -7,11 +6,11 @@ class WalletService {
         try {
             const findWallet = await db('wallets')
                 .select('*')
-                .where('user_id', wallet.user_id);
+                .where('user_id', wallet.userId);
 
             if (!findWallet[0]) await db('wallets').insert(wallet);
 
-            return { success: true, data: { wallet } };
+            return { success: true, data: {} };
         } catch (err) {
             return { success: false, message: (err as Error).message };
         }
@@ -21,7 +20,7 @@ class WalletService {
         try {
             const findWallet = await db('wallets')
                 .select('*')
-                .where('user_id', wallet.user_id);
+                .where('user_id', wallet.userId);
             if (!findWallet[0])
                 return { success: false, message: 'No wallet found' };
             return { success: true, data: findWallet[0] };
@@ -31,16 +30,16 @@ class WalletService {
     }
 
     async update(wallet: Wallet) {
-        const { user_id, amount } = wallet;
+        const { userId, amount } = wallet;
 
         try {
             const updateWallet = await db('wallets')
-                .where('user_id', user_id)
+                .where('user_id', userId)
                 .update({
                     amount,
                 });
 
-            return { success: true, data: { user_id, amount } };
+            return { success: true, data: { user_id: userId, amount } };
         } catch (err) {
             return { success: false, message: (err as Error).message };
         }
@@ -50,11 +49,11 @@ class WalletService {
         try {
             const findWallet = await db('wallets')
                 .select('*')
-                .where('user_id', wallet.user_id);
+                .where('user_id', wallet.userId);
             if (!findWallet[0])
                 return { success: false, message: 'No wallet found' };
             const deleteWallet = await db('wallets')
-                .where('user_id', wallet.user_id)
+                .where('user_id', wallet.userId)
                 .delete();
             return { success: true, data: {} };
         } catch (err) {
@@ -63,4 +62,4 @@ class WalletService {
     }
 }
 
-export { WalletService };
+export default new WalletService();

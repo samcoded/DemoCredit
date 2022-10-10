@@ -1,21 +1,16 @@
 import { Request, Response } from 'express';
-import db from '../db/database';
-import Wallet from '../interface/wallet';
-import { WalletService } from '../service/wallet';
-import { UserService } from '../service/user';
-
-const walletService = new WalletService();
-const userService = new UserService();
+import walletService from '../service/wallet';
+import userService from '../service/user';
 
 class WalletController {
     async fund(req: Request, res: Response) {
-        const { id: user_id } = req.params;
+        const { id: userId } = req.params;
         const { amount } = req.body;
 
-        const wallet = await walletService.getWalletByUserId({ user_id });
+        const wallet = await walletService.getWalletByUserId({ userId });
         const newAmount = parseInt(wallet.data.amount) + parseInt(amount);
         const updateWallet = await walletService.update({
-            user_id,
+            userId,
             amount: newAmount,
         });
         if (!updateWallet.success)
@@ -29,19 +24,25 @@ class WalletController {
     }
 
     async transfer(req: Request, res: Response) {
-        const { id: sender_id } = req.params;
-        const { receiver_id } = req.body;
-        const { amount } = req.body;
+        const { id: senderID, logged_user_id: loggedUserId } = req.params;
+        const { to, amount } = req.body;
+
+        // check logged_user_id equal sender id
+        if (loggedUserId != senderID)
+            return res
+                .status(400)
+                .json({ message: 'Invalid Authorization', data: {} });
 
         // confirm receiver
-        const receiver = await userService.readById(receiver_id);
+        const receiver = await userService.readByEmail(to);
         if (!receiver.success)
             return res
                 .status(400)
-                .json({ message: 'Invalid receiver', data: {} });
+                .json({ message: 'Invalid receiver email', data: {} });
 
+        // get sender wallet
         const wallet = await walletService.getWalletByUserId({
-            user_id: sender_id,
+            userId: senderID,
         });
 
         if (wallet.data.amount < amount)
@@ -50,7 +51,7 @@ class WalletController {
                 .json({ message: 'Insufficient balance', data: {} });
         const deductedAmount = parseInt(wallet.data.amount) - parseInt(amount);
         const senderUpdateWallet = await walletService.update({
-            user_id: sender_id,
+            userId: senderID,
             amount: deductedAmount,
         });
         if (!senderUpdateWallet.success)
@@ -60,12 +61,12 @@ class WalletController {
 
         // SEND TO RECEIVER
         const receiverWallet = await walletService.getWalletByUserId({
-            user_id: receiver_id,
+            userId: receiver.data.id,
         });
         const newAmount =
             parseInt(receiverWallet.data.amount) + parseInt(amount);
         const updateWallet = await walletService.update({
-            user_id: receiver_id,
+            userId: receiver.data.id,
             amount: newAmount,
         });
         if (!updateWallet.success)
@@ -74,22 +75,31 @@ class WalletController {
                 .json({ message: updateWallet.message, data: {} });
         return res.status(200).json({
             message:
-                'Wallet transfer ' + amount + ' successfully to ' + receiver_id,
+                'Wallet transfer successful: #' +
+                amount +
+                ' sent to ' +
+                receiver.data.email,
             data: senderUpdateWallet.data,
         });
     }
     async withdraw(req: Request, res: Response) {
-        const { id: user_id } = req.params;
+        const { id: userId, logged_user_id: loggedUserId } = req.params;
         const { amount } = req.body;
 
-        const wallet = await walletService.getWalletByUserId({ user_id });
+        // check logged_user_id equal sender id
+        if (loggedUserId != userId)
+            return res
+                .status(400)
+                .json({ message: 'Invalid Authorization', data: {} });
+
+        const wallet = await walletService.getWalletByUserId({ userId });
         if (wallet.data.amount < amount)
             return res
                 .status(400)
                 .json({ message: 'Insufficient balance', data: {} });
         const newAmount = parseInt(wallet.data.amount) - parseInt(amount);
         const updateWallet = await walletService.update({
-            user_id,
+            userId,
             amount: newAmount,
         });
         if (!updateWallet.success)
@@ -103,4 +113,4 @@ class WalletController {
     }
 }
 
-export { WalletController };
+export default new WalletController();

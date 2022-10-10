@@ -7,9 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 const saltRounds = 8;
 const jwtSecret: Secret = process.env.JWT_SECRET as string;
-import { WalletService } from '../service/wallet';
-
-const walletService = new WalletService();
+import walletService from '../service/wallet';
 
 class UserService {
     async create(user: User) {
@@ -24,7 +22,7 @@ class UserService {
             user.password = await bcrypt.hash(user.password, saltRounds);
             const create = await db('users').insert(user);
             const id = create[0];
-            await walletService.create({ user_id: id, amount: 0 }); //create wallet
+            await walletService.create({ userId: id, amount: 0 }); //create wallet
             const token = jwt.sign(
                 { id: findUser[0].id?.toString(), name: findUser[0].name },
                 jwtSecret,
@@ -102,6 +100,24 @@ class UserService {
         }
     }
 
+    async readByEmail(email: string) {
+        try {
+            const user = await db('users')
+                .join('wallets', 'wallets.user_id', 'users.id')
+                .select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'wallets.amount'
+                )
+                .where('users.email', email);
+            if (!user[0]) return { success: false, message: 'No user found' };
+            return { success: true, data: user[0] };
+        } catch (err) {
+            return { success: false, message: (err as Error).message };
+        }
+    }
+
     async update(user: User) {
         const { id } = user;
         const { name, email, password } = user;
@@ -124,7 +140,7 @@ class UserService {
             const user = await db('users').select('*').where('id', id);
             if (!user[0]) return { success: false, message: 'No user found' };
             await db('users').where('id', id).delete();
-            await walletService.delete({ user_id: id }); //delete wallet
+            await walletService.delete({ userId: id }); //delete wallet
             return { success: true, data: {} };
         } catch (err) {
             return { success: false, message: (err as Error).message };
@@ -132,4 +148,4 @@ class UserService {
     }
 }
 
-export { UserService };
+export default new UserService();
