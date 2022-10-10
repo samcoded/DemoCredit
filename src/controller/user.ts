@@ -37,7 +37,9 @@ class UserController {
         const login = await userService.checkLogin(user);
         if (!login.success)
             return res.status(500).json({ message: login.message, data: {} });
-        return res.status(200).json({ message: '', data: login.data });
+        return res
+            .status(200)
+            .json({ message: 'Login successful', data: login.data });
     }
 
     async read(req: Request, res: Response) {
