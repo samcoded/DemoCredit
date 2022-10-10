@@ -1,8 +1,12 @@
 import db from '../db/database';
 import User from '../interface/user';
 import bcrypt from 'bcrypt';
+import jwt, { Secret } from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const saltRounds = 8;
+const jwtSecret: Secret = process.env.JWT_SECRET as string;
 import { WalletService } from '../service/wallet';
 
 const walletService = new WalletService();
@@ -21,9 +25,16 @@ class UserService {
             const create = await db('users').insert(user);
             const id = create[0];
             await walletService.create({ user_id: id, amount: 0 }); //create wallet
+            const token = jwt.sign(
+                { id: findUser[0].id?.toString(), name: findUser[0].name },
+                jwtSecret,
+                {
+                    expiresIn: '2 days',
+                }
+            ); //generate jwt token
             return {
                 success: true,
-                data: { id, name: user.name, email: user.email },
+                data: { id, name: user.name, email: user.email, token },
             };
         } catch (err) {
             return { success: false, message: (err as Error).message };
@@ -38,6 +49,13 @@ class UserService {
 
         const isMatch = bcrypt.compareSync(password, findUser[0].password);
         if (!isMatch) return { success: false, message: 'Login failed' };
+        const token = jwt.sign(
+            { id: findUser[0].id?.toString(), name: findUser[0].name },
+            jwtSecret,
+            {
+                expiresIn: '2 days',
+            }
+        );
 
         return {
             success: true,
@@ -45,6 +63,7 @@ class UserService {
                 id: findUser[0].id,
                 name: findUser[0].name,
                 email: findUser[0].email,
+                token,
             },
         };
     }
