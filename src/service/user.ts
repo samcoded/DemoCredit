@@ -1,5 +1,8 @@
 import db from '../db/database';
 import User from '../interface/user';
+import bcrypt from 'bcrypt';
+
+const saltRounds = 8;
 import { WalletService } from '../service/wallet';
 
 const walletService = new WalletService();
@@ -14,6 +17,7 @@ class UserService {
             if (findUser[0])
                 return { success: false, message: 'Account already exists' };
 
+            user.password = await bcrypt.hash(user.password, saltRounds);
             const create = await db('users').insert(user);
             const id = create[0];
             await walletService.create({ user_id: id, amount: 0 }); //create wallet
@@ -32,8 +36,8 @@ class UserService {
         const findUser = await db('users').select('*').where('email', email);
         if (!findUser[0]) return { success: false, message: 'Login failed' };
 
-        if (findUser[0].password != password)
-            return { success: false, message: 'Login failed' };
+        const isMatch = bcrypt.compareSync(password, findUser[0].password);
+        if (!isMatch) return { success: false, message: 'Login failed' };
 
         return {
             success: true,
