@@ -8,7 +8,7 @@ import validator from '../utils/validator';
 const router = Router();
 
 router.get('/', (req, res) => {
-    res.status(404).json({
+    res.status(200).json({
         message: 'DemoCredit API',
     });
 });
