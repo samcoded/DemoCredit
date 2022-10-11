@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import User from '../interface/user';
 import userService from '../service/user';
-
+import CustomResponse from '../interface/response';
+import { errorResponse, successResponse } from '../utils/apiresponse';
 class UserController {
-    async register(req: Request, res: Response) {
+    async register(req: Request, res: Response<CustomResponse>) {
         const { name, email, password } = req.body;
 
         const user: User = {
@@ -14,16 +15,21 @@ class UserController {
 
         const registerUser = await userService.create(user);
         if (!registerUser.success)
-            return res
-                .status(500)
-                .json({ message: registerUser.message, data: {} });
-
-        return res
-            .status(200)
-            .json({ message: 'User registered', data: registerUser.data });
+            return errorResponse(
+                res,
+                500,
+                registerUser.message,
+                registerUser.data
+            );
+        return successResponse(
+            res,
+            200,
+            registerUser.message,
+            registerUser.data
+        );
     }
 
-    async login(req: Request, res: Response) {
+    async login(req: Request, res: Response<CustomResponse>) {
         const { email, password } = req.body;
 
         const user: User = {
@@ -33,35 +39,33 @@ class UserController {
 
         const login = await userService.checkLogin(user);
         if (!login.success)
-            return res.status(500).json({ message: login.message, data: {} });
-        return res
-            .status(200)
-            .json({ message: 'Login successful', data: login.data });
+            return errorResponse(res, 500, login.message, login.data);
+        return successResponse(res, 200, login.message, login.data);
     }
 
-    async readAll(req: Request, res: Response) {
+    async readAll(req: Request, res: Response<CustomResponse>) {
         const read = await userService.readAll();
         if (!read.success)
-            return res.status(500).json({ message: read.message, data: {} });
-        return res
-            .status(200)
-            .json({ message: 'Users retrieved', data: read.data });
+            return errorResponse(res, 500, read.message, read.data);
+        return successResponse(res, 200, read.message, read.data);
     }
 
-    async readById(req: Request, res: Response) {
+    async readById(req: Request, res: Response<CustomResponse>) {
         const { id } = req.params;
 
         const read = await userService.readById(id);
         if (!read.success)
-            return res.status(500).json({ message: read.message, data: {} });
-        return res
-            .status(200)
-            .json({ message: 'User retrieved', data: read.data });
+            return errorResponse(res, 500, read.message, read.data);
+        return successResponse(res, 200, read.message, read.data);
     }
 
-    async update(req: Request, res: Response) {
-        const { id } = req.params;
+    async update(req: Request, res: Response<CustomResponse>) {
+        const { id, logged_user_id: loggedUserId } = req.params;
         const { name, email, password } = req.body;
+
+        // check logged_user_id equal sender id
+        if (loggedUserId != id)
+            return errorResponse(res, 400, 'Invalid Authorization', {});
 
         const update: User = {
             id,
@@ -72,25 +76,22 @@ class UserController {
 
         const updateUser = await userService.update(update);
         if (!updateUser.success)
-            return res
-                .status(500)
-                .json({ message: updateUser.message, data: {} });
-        return res
-            .status(200)
-            .json({ message: 'User updated', data: updateUser.data });
+            return errorResponse(res, 500, updateUser.message, updateUser.data);
+        return successResponse(res, 200, updateUser.message, updateUser.data);
     }
 
-    async delete(req: Request, res: Response) {
-        const { id } = req.params;
+    async delete(req: Request, res: Response<CustomResponse>) {
+        const { id, logged_user_id: loggedUserId } = req.params;
+
+        // check logged_user_id equal sender id
+        if (loggedUserId != id)
+            if (loggedUserId != id)
+                return errorResponse(res, 400, 'Invalid Authorization', {});
 
         const deleteUser = await userService.delete(id);
         if (!deleteUser.success)
-            return res
-                .status(500)
-                .json({ message: deleteUser.message, data: {} });
-        return res
-            .status(200)
-            .json({ message: 'User deleted', data: deleteUser.data });
+            return errorResponse(res, 500, deleteUser.message, deleteUser.data);
+        return successResponse(res, 200, deleteUser.message, deleteUser.data);
     }
 }
 

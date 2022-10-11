@@ -7,6 +7,13 @@ import validator from '../utils/validator';
 
 const router = Router();
 
+router.get('/', (req, res) => {
+    res.status(404).json({
+        message: 'DemoCredit API',
+    });
+});
+
+// PUBLIC ROUTES
 router.post(
     '/register',
     validator.register(),
@@ -14,7 +21,10 @@ router.post(
     userController.register
 );
 router.post('/login', validator.login(), validate, userController.login);
+
+// PRIVATE ROUTES - NEEDS AUTHENTICATION (JWT)
 router.get('/users', auth, userController.readAll);
+
 router
     .get(
         '/users/:id',
@@ -38,8 +48,26 @@ router
         userController.delete
     );
 
-router.put('/wallet/fund/:id', auth, walletController.fund);
-router.put('/wallet/transfer/:id', auth, walletController.transfer);
-router.put('/wallet/withdraw/:id', auth, walletController.withdraw);
+router.put(
+    '/wallet/fund/:id',
+    auth,
+    validator.fund(),
+    validate,
+    walletController.fund
+);
+router.put(
+    '/wallet/transfer/:id',
+    auth,
+    validator.transfer(),
+    validate,
+    walletController.transfer
+);
+router.put(
+    '/wallet/withdraw/:id',
+    auth,
+    validator.withdraw(),
+    validate,
+    walletController.withdraw
+);
 
 export default router;

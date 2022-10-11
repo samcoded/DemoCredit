@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 const { validationResult } = require('express-validator');
+import { errorResponse } from '../utils/apiresponse';
 
 export const validate = async (
     req: Request,
@@ -8,9 +9,7 @@ export const validate = async (
 ) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res
-            .status(400)
-            .json({ message: errors.array()[0].msg, data: {} });
+        return errorResponse(res, 400, errors.array()[0].msg, {});
     }
     next();
 };

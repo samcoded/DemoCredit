@@ -1,44 +1,51 @@
 import { Request, Response } from 'express';
 import walletService from '../service/wallet';
 import userService from '../service/user';
+import CustomResponse from '../interface/response';
+import { errorResponse, successResponse } from '../utils/apiresponse';
 
 class WalletController {
-    async fund(req: Request, res: Response) {
-        const { id: userId } = req.params;
+    async fund(req: Request, res: Response<CustomResponse>) {
+        const { id: userId, logged_user_id: loggedUserId } = req.params;
         const { amount } = req.body;
+        try {
+            // check logged_user_id equal sender id
+            if (loggedUserId != userId)
+                return errorResponse(res, 400, 'Invalid Authorization', {});
 
-        const wallet = await walletService.getWalletByUserId({ userId });
-        const newAmount = parseInt(wallet.data.amount) + parseInt(amount);
-        const updateWallet = await walletService.update({
-            userId,
-            amount: newAmount,
-        });
-        if (!updateWallet.success)
-            return res
-                .status(500)
-                .json({ message: updateWallet.message, data: {} });
-        return res.status(200).json({
-            message: 'Wallet funded: ' + amount,
-            data: updateWallet.data,
-        });
+            const wallet = await walletService.getWalletByUserId({ userId });
+
+            const oldAmount = wallet.data.amount;
+            const newAmount = parseInt(oldAmount) + parseInt(amount);
+
+            const updateWallet = await walletService.update({
+                userId,
+                amount: newAmount,
+            });
+            if (!updateWallet.success)
+                return errorResponse(res, 500, updateWallet.message, {});
+            return successResponse(
+                res,
+                200,
+                'Wallet funded: ' + amount,
+                updateWallet.data
+            );
+        } catch (err) {
+            return errorResponse(res, 500, (err as Error).message, {});
+        }
     }
 
-    async transfer(req: Request, res: Response) {
+    async transfer(req: Request, res: Response<CustomResponse>) {
         const { id: senderID, logged_user_id: loggedUserId } = req.params;
         const { to, amount } = req.body;
 
         // check logged_user_id equal sender id
         if (loggedUserId != senderID)
-            return res
-                .status(400)
-                .json({ message: 'Invalid Authorization', data: {} });
-
+            return errorResponse(res, 400, 'Invalid Authorization', {});
         // confirm receiver
         const receiver = await userService.readByEmail(to);
         if (!receiver.success)
-            return res
-                .status(400)
-                .json({ message: 'Invalid receiver email', data: {} });
+            return errorResponse(res, 400, 'Invalid Receiver email', {});
 
         // get sender wallet
         const wallet = await walletService.getWalletByUserId({
@@ -46,18 +53,14 @@ class WalletController {
         });
 
         if (wallet.data.amount < amount)
-            return res
-                .status(400)
-                .json({ message: 'Insufficient balance', data: {} });
+            return errorResponse(res, 400, 'Insufficient balance', {});
         const deductedAmount = parseInt(wallet.data.amount) - parseInt(amount);
         const senderUpdateWallet = await walletService.update({
             userId: senderID,
             amount: deductedAmount,
         });
         if (!senderUpdateWallet.success)
-            return res
-                .status(500)
-                .json({ message: senderUpdateWallet.message, data: {} });
+            return errorResponse(res, 500, senderUpdateWallet.message, {});
 
         // SEND TO RECEIVER
         const receiverWallet = await walletService.getWalletByUserId({
@@ -70,46 +73,41 @@ class WalletController {
             amount: newAmount,
         });
         if (!updateWallet.success)
-            return res
-                .status(500)
-                .json({ message: updateWallet.message, data: {} });
-        return res.status(200).json({
-            message:
-                'Wallet transfer successful: #' +
+            return errorResponse(res, 500, updateWallet.message, {});
+        return successResponse(
+            res,
+            200,
+            'Wallet transfer successful: #' +
                 amount +
                 ' sent to ' +
                 receiver.data.email,
-            data: senderUpdateWallet.data,
-        });
+            senderUpdateWallet.data
+        );
     }
-    async withdraw(req: Request, res: Response) {
+    async withdraw(req: Request, res: Response<CustomResponse>) {
         const { id: userId, logged_user_id: loggedUserId } = req.params;
         const { amount } = req.body;
 
         // check logged_user_id equal sender id
         if (loggedUserId != userId)
-            return res
-                .status(400)
-                .json({ message: 'Invalid Authorization', data: {} });
+            return errorResponse(res, 400, 'Invalid Authorization', {});
 
         const wallet = await walletService.getWalletByUserId({ userId });
         if (wallet.data.amount < amount)
-            return res
-                .status(400)
-                .json({ message: 'Insufficient balance', data: {} });
+            return errorResponse(res, 400, 'Insufficient balance', {});
         const newAmount = parseInt(wallet.data.amount) - parseInt(amount);
         const updateWallet = await walletService.update({
             userId,
             amount: newAmount,
         });
         if (!updateWallet.success)
-            return res
-                .status(500)
-                .json({ message: updateWallet.message, data: {} });
-        return res.status(200).json({
-            message: 'Wallet funded: ' + amount,
-            data: updateWallet.data,
-        });
+            return errorResponse(res, 500, updateWallet.message, {});
+        return successResponse(
+            res,
+            200,
+            'Wallet withdrawal successful: #' + amount,
+            updateWallet.data
+        );
     }
 }
 

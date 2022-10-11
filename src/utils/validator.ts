@@ -71,9 +71,9 @@ class Validator {
                 .withMessage('Amount must be numeric'),
             body('to')
                 .notEmpty()
-                .withMessage('To is required')
+                .withMessage('Receiver (to) email is required')
                 .isEmail()
-                .withMessage('To is invalid'),
+                .withMessage('Receiver (to) email is invalid'),
         ];
     }
     withdraw() {
