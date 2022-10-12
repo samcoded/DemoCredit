@@ -6,7 +6,7 @@ Demo Credit is a mobile lending app that requires wallet functionality. This is 
 
 ## TOOLS
 
-NODEJS - Server framework
+NODEJS (Typescript) - Server framework
 
 EXPRESS - Web framework
 
