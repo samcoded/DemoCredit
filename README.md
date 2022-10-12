@@ -10,7 +10,7 @@ NODEJS - Server framework
 
 EXPRESS - Web framework
 
-MYSQL or POSTGRES (KNEX) - Database framework
+MYSQL (KNEX) - Database framework
 
 ## API DOCUMENTATION
 
