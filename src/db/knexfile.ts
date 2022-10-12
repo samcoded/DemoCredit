@@ -59,7 +59,7 @@ const config: { [key: string]: Knex.Config } = {
     //     },
     // },
     production: {
-        client: 'pg',
+        client: 'mysql',
         connection: { host, port, database, user, password },
         pool: {
             min: 2,
