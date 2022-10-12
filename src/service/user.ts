@@ -1,13 +1,12 @@
 import db from '../db/database';
 import User from '../interface/user';
 import Payload from '../interface/service';
-import bcrypt from 'bcrypt';
-import jwt, { Secret } from 'jsonwebtoken';
+import { hashPassword, comparePassword } from '../utils/bcrypt';
+import { genToken } from '../utils/jwtoken';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const saltRounds = 10;
-const jwtSecret: Secret = process.env.JWT_SECRET as string;
+
 import walletService from '../service/wallet';
 
 class UserService {
@@ -24,17 +23,11 @@ class UserService {
                     data: {},
                 };
 
-            user.password = await bcrypt.hash(user.password, saltRounds);
+            user.password = await hashPassword(user.password);
             const create = await db('users').insert(user);
             const id = create[0];
-            await walletService.create({ userId: id, amount: 0 }); //create wallet
-            const token = jwt.sign(
-                { id: id?.toString(), name: user.name },
-                jwtSecret,
-                {
-                    expiresIn: '2 days',
-                }
-            ); //generate jwt token
+
+            const token = genToken({ id: id?.toString(), name: user.name }); //generate jwt token
             return {
                 success: true,
                 message: 'User created',
@@ -56,16 +49,13 @@ class UserService {
         if (!findUser[0])
             return { success: false, message: 'Login failed', data: {} };
 
-        const isMatch = bcrypt.compareSync(password, findUser[0].password);
+        const isMatch = comparePassword(password, findUser[0].password);
         if (!isMatch)
             return { success: false, message: 'Login failed', data: {} };
-        const token = jwt.sign(
-            { id: findUser[0].id?.toString(), name: findUser[0].name },
-            jwtSecret,
-            {
-                expiresIn: '2 days',
-            }
-        );
+        const token = genToken({
+            id: findUser[0].id?.toString(),
+            name: findUser[0].name,
+        });
 
         return {
             success: true,

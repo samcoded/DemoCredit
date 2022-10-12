@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import User from '../interface/user';
 import userService from '../service/user';
+import walletService from '../service/wallet';
 import CustomResponse from '../interface/response';
 import { errorResponse, successResponse } from '../utils/apiresponse';
 class UserController {
@@ -21,6 +22,10 @@ class UserController {
                 registerUser.message,
                 registerUser.data
             );
+        // create wallet
+
+        await walletService.create({ userId: registerUser.data.id, amount: 0 }); //create wallet
+
         return successResponse(
             res,
             200,

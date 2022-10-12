@@ -23,6 +23,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
             return errorResponse(res, 401, 'Invalid Authentication', {});
         req.params.logged_user_id = findUser[0].id;
         req.params.logged_user_name = findUser[0].name;
+        req.params.logged_email = findUser[0].email;
     } catch (err) {
         return errorResponse(res, 401, (err as Error).message, {});
     }
