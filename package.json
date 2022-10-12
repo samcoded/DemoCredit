@@ -9,9 +9,10 @@
     "build": "tsc",
     "migrate": "npx knex migrate:latest --knexfile ./src/db/knexfile.ts",
     "rollback": "npx knex migrate:rollback --knexfile ./src/db/knexfile.ts",
+    "seed": "npx knex seed:run --knexfile ./src/db/knexfile.ts",
     "migrate:production": "npx knex migrate:latest --knexfile ./dist/db/knexfile.js",
     "rollback:production": "npx knex migrate:rollback --knexfile ./dist/db/knexfile.js",
-    "seed": "npx knex seed:run --knexfile ./src/db/knexfile.ts",
+    "seed:production": "npx knex seed:run --knexfile ./src/db/knexfile.ts",
     "test": "mocha --require ts-node/register --recursive src/**/*.test.ts",
     "test:watch": "mocha --watch --require ts-node/register --recursive src/**/*.test.ts"
   },

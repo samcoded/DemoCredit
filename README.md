@@ -12,6 +12,14 @@ EXPRESS - Web framework
 
 MYSQL or POSTGRES (KNEX) - Database framework
 
+## API DOCUMENTATION
+
+https://documenter.getpostman.com/view/14158032/2s83zjtPNb (API DOCUMENTATION ON POSTMAN)
+
+## LIVE DEMO
+
+https://samuel-anozie-lendsqr-be-test.herokuapp.com/api (deployed to Heroku)
+
 ## DATABASE design
 
 ![DB DESIGN](/DBDesign.png 'DB DESIGN')
@@ -22,26 +30,60 @@ Rename _.env.example_ to _.env_ and add credetials
 
 ` npm install`
 
-## RUNNING THE APP
+## MIGRATION
 
-`npm run migrate`
+`npm run migrate:production`
+
+## RUNNING THE APP
 
 ` npm build`
 
 ` npm start`
 
-## Start App Development
+## START APP DEV
 
 `npm run dev`
 
-## Testing
+## TESTING
 
 `npm run test`
 
-## API DOCUMENTATION
+## ROUTES
 
-https://documenter.getpostman.com/view/14158032/2s83zjtPNb (API DOCUMENTATION ON POSTMAN)
+```
+#  Headers
+Accept: application/json
 
-## LIVE DEMO
+# Public
 
-http://samuel-anozie-lendsqr-be-test.herokuapp.com (deployed to Heroku)
+POST   /api/login
+@body: email, password
+
+POST   /api/register
+@body: name, email, password
+
+
+# Protected (Needs Bearer Token)
+
+-USER ROUTES
+
+GET   /api/users - get all users
+
+GET   /api/users/{user_id} - get user by id
+
+PUT   /api/users/{user_id}  - update user
+@body: email, name
+
+
+-WALLET ROUTES
+GET   /api/wallet/{user_id} - get wallet details by user_id
+
+PUT   /api/wallet/fund/{user_id}  - fund user_id wallet
+@body: amount
+
+PUT   /api/wallet/transfer/{user_id}  - transfer to another user
+@body: to, amount
+
+GET   /api/wallet/{user_id} - get wallet transactions by user_id
+
+```
