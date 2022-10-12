@@ -39,13 +39,6 @@ router
         validator.update(),
         validate,
         userController.update
-    )
-    .delete(
-        '/users/:id',
-        auth,
-        validator.paramId(),
-        validate,
-        userController.delete
     );
 
 router.put(
@@ -70,4 +63,19 @@ router.put(
     walletController.withdraw
 );
 
+router.get(
+    '/wallet/transactions/:id',
+    auth,
+    validator.paramId(),
+    validate,
+    walletController.readTransactionsByID
+);
+
+router.get(
+    '/wallet/:id',
+    auth,
+    validator.paramId(),
+    validate,
+    walletController.readById
+);
 export default router;
