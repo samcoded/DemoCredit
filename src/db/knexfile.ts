@@ -1,5 +1,6 @@
 import type { Knex } from 'knex';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Update with your config settings.
 dotenv.config();
@@ -18,19 +19,58 @@ const config: { [key: string]: Knex.Config } = {
             max: 10,
         },
         migrations: {
+            directory: path.resolve(__dirname, 'migrations'),
             tableName: 'knex_migrations',
         },
+        seeds: {
+            directory: path.resolve(__dirname, 'seeds'),
+        },
     },
-
+    test: {
+        client: 'sqlite3',
+        connection: ':memory:',
+        useNullAsDefault: true,
+        migrations: {
+            directory: path.join(__dirname, 'migrations'),
+        },
+        seeds: {
+            directory: path.join(__dirname, 'seeds'),
+        },
+    },
+    // test: {
+    //     client: 'mysql',
+    //     connection: {
+    //         host,
+    //         port,
+    //         database: `test_${database}`,
+    //         user,
+    //         password,
+    //     },
+    //     pool: {
+    //         min: 2,
+    //         max: 10,
+    //     },
+    //     migrations: {
+    //         directory: path.resolve(__dirname, 'migrations'),
+    //         tableName: 'knex_migrations',
+    //     },
+    //     seeds: {
+    //         directory: path.resolve(__dirname, 'seeds'),
+    //     },
+    // },
     production: {
-        client: 'mysql',
+        client: 'pg',
         connection: { host, port, database, user, password },
         pool: {
             min: 2,
             max: 10,
         },
         migrations: {
+            directory: path.resolve(__dirname, 'migrations'),
             tableName: 'knex_migrations',
+        },
+        seeds: {
+            directory: path.resolve(__dirname, 'seeds'),
         },
     },
 };
